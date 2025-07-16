@@ -1,5 +1,7 @@
 import { request, Variables } from "graphql-request";
 import axios from "axios";
+import { hash } from "ohash";
+import { getCached, setCached } from "../cache";
 
 async function fetchToken(): Promise<string | undefined> {
   const basicAuth = Buffer.from(
@@ -66,4 +68,28 @@ export async function queryWcl<T, V extends Variables>(
   }
 
   throw new Error("Something went wrong, Xeph pls fix");
+}
+
+export async function queryWclWithCache<T, V extends Variables>(
+  keyPrefix: string,
+  query: string,
+  variables: V,
+  ttl?: number
+): Promise<T> {
+  const cacheKey = `${keyPrefix}:${hash(variables)}`;
+
+  try {
+    const cached = await getCached<T>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const data = await queryWcl<T, V>(query, variables);
+
+    await setCached(cacheKey, data, ttl);
+
+    return data;
+  } catch (err) {
+    throw err;
+  }
 }

@@ -1,4 +1,4 @@
-import { queryWcl } from "@/library/wcl/api";
+import { queryWclWithCache } from "@/library/wcl/api";
 import { gql } from "graphql-request";
 
 export const query = gql`
@@ -121,7 +121,8 @@ export async function POST(req: Request) {
       return maybeVariables;
     }
 
-    const data = await queryWcl<GuildResponse, QueryVariables>(
+    const data = await queryWclWithCache<GuildResponse, QueryVariables>(
+      "guild",
       query,
       maybeVariables
     );
