@@ -1,7 +1,7 @@
 import { queryWclWithCache } from "@/library/wcl/api";
 import { gql } from "graphql-request";
 
-export const query = gql`
+const query = gql`
   query guild($id: Int, $name: String, $server: String, $region: String) {
     guildData {
       guild(id: $id, name: $name, serverSlug: $server, serverRegion: $region) {
@@ -22,7 +22,7 @@ export const query = gql`
   }
 `;
 
-export type GuildResponse = {
+type GuildResponse = {
   guildData: {
     guild: {
       description: string;
