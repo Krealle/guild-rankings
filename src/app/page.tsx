@@ -1,17 +1,19 @@
 "use client";
 import { useState } from "react";
 import { Guild } from "./api/wcl/guild/route";
+import { GuildMemberData } from "./api/wcl/guildRankings/[id]/route";
 
 export default function Home() {
   const [id, setId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<Guild | null>(null);
+  const [guildData, setGuildData] = useState<Guild | null>(null);
+  const [guildMembers, setGuildMembers] = useState<GuildMemberData[]>([]);
 
-  async function fetchData() {
+  async function fetchGuild() {
     setLoading(true);
     setError(null);
-    setData(null);
+    setGuildData(null);
 
     try {
       const res = await fetch("/api/wcl/guild", {
@@ -26,7 +28,31 @@ export default function Home() {
       }
 
       const result = await res.json();
-      setData(result);
+      setGuildData(result);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchGuildRankings() {
+    setLoading(true);
+    setError(null);
+    setGuildMembers([]);
+
+    try {
+      const res = await fetch(`/api/wcl/guildRankings/${id}`, {
+        method: "GET",
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Unknown error");
+      }
+
+      const result = await res.json();
+      setGuildMembers(result);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -49,16 +75,24 @@ export default function Home() {
       />
 
       <button
-        onClick={fetchData}
+        onClick={fetchGuild}
         disabled={!id || loading}
         style={{ padding: "8px 16px" }}
       >
-        {loading ? "Loading..." : "Fetch Data"}
+        {loading ? "Loading..." : "Fetch Guild"}
+      </button>
+
+      <button
+        onClick={fetchGuildRankings}
+        disabled={!id || loading}
+        style={{ padding: "8px 16px" }}
+      >
+        {loading ? "Loading..." : "Fetch Guild Rankings"}
       </button>
 
       {error && <p style={{ color: "red" }}>Error: {error}</p>}
 
-      {data && (
+      {guildData && (
         <table
           border={1}
           cellPadding={8}
@@ -74,17 +108,25 @@ export default function Home() {
           </thead>
           <tbody>
             <tr>
-              <td>{data.id}</td>
-              <td>{data.name}</td>
-              <td>{data.server}</td>
-              <td>{data.region}</td>
+              <td>{guildData.id}</td>
+              <td>{guildData.name}</td>
+              <td>{guildData.server}</td>
+              <td>{guildData.region}</td>
             </tr>
           </tbody>
         </table>
       )}
 
-      {data && (
-        <pre style={{ marginTop: 20 }}>{JSON.stringify(data, null, 2)}</pre>
+      {guildData && (
+        <pre style={{ marginTop: 20 }}>
+          {JSON.stringify(guildData, null, 2)}
+        </pre>
+      )}
+
+      {guildMembers && (
+        <pre style={{ marginTop: 20 }}>
+          {JSON.stringify(guildMembers, null, 2)}
+        </pre>
       )}
     </div>
   );
